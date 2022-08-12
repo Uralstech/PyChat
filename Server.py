@@ -1,3 +1,4 @@
+import cmd
 import socket
 import threading
 from datetime import datetime
@@ -7,7 +8,7 @@ HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9090
 LOGFILE = environ["HOMEPATH"] + r"\Desktop\PyChat\Log.log" # Replace with path to log file
 
-print(HOST) # Set this a 'HOST' on Client.py
+print(HOST)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
@@ -81,7 +82,11 @@ def receive():
 
         client.send("USRNME".encode('utf-8'))
         username = client.recv(1024).decode('utf-8')
-        if username not in usernames:
+        legal = True
+        for i in username:
+            if i in " \n\t\r\a\f\v\b\\": legal = False
+
+        if username not in usernames and legal and len(username) > 0 and username != "__SERVER__":
             usernames.append(username)
             clients.append(client)
             broadcast(f"__SERVER__: {username} has joined!\n")

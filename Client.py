@@ -1,7 +1,6 @@
 import socket
 import threading
 from tkinter import *
-from tkinter.messagebox import showerror
 from tkinter.simpledialog import askstring
 from tkinter.scrolledtext import ScrolledText
 
@@ -14,7 +13,6 @@ class Client:
         root.withdraw()
 
         self.username = askstring("PyChat", "Enter you username", parent=root)
-        assert self.username != "__SERVER__" and self.username != '', "ILLEGAL USERNAME"
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
@@ -54,10 +52,20 @@ class Client:
         self.textArea['state'] = 'normal'
         self.textArea.delete('0.0', 'end')
         self.textArea['state'] = 'disabled'
+    
+    def showerror(self, text, size):
+        def stop():
+            root.destroy()
+            quit(0)
 
-    def stop(self, msg=""):
-        if msg != "": showerror("PyChat", msg)
+        root = Tk()
+        root.title("PyChat")
+        root.geometry(size)
+        Label(root, text=text, font=("Consolas", 10)).pack()
+        Button(root, text="Ok", font=("Consolas", 10), command=stop).pack(padx=10, fill='x', expand=1)
+        root.mainloop()
 
+    def stop(self):
         self.running = False
         self.root.destroy()
         self.sock.close()
@@ -70,8 +78,9 @@ class Client:
             self.clear()
         else:
             message = f'{self.username}: {message}'
-            self.sock.send(message.encode('utf-8'))
-        
+            try: self.sock.send(message.encode('utf-8'))
+            except OSError: self.showerror("COULD NOT SEND MESSAGE.\nTHIS COULD BE BECAUSE\nTHE SERVER IS DOWN.", "200x85")
+
         self.inputArea.delete('0.0', 'end')
 
     def receive(self):
@@ -79,7 +88,7 @@ class Client:
             try:
                 message = self.sock.recv(1024).decode('utf-8')
                 if message == "USRNME": self.sock.send(self.username.encode('utf-8'))
-                elif message == "E000": self.stop("E000: USERNAME ALREADY EXISTS"); break
+                elif message == "E000": self.showerror("USERNAME UNAVAILABLE.", "170x60"); break
                 else:
                     if self.guiDone:
                         self.textArea['state'] = 'normal'
@@ -87,8 +96,10 @@ class Client:
                         self.textArea.yview('end')
                         self.textArea['state'] = 'disabled'
             except ConnectionAbortedError:
+                self.running = False
                 break
             except:
+                self.running = False
                 self.sock.close()
                 break
 
