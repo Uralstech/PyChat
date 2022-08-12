@@ -1,11 +1,13 @@
-from dataclasses import replace
 import socket
 import threading
 from datetime import datetime
+from os import environ
 
-HOST = "127.0.0.1" # Get public IP with command 'ipconfig' on Windows
+HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9090
-LOGFILE = r"C:\Users\asus\Desktop\PyChat\Log.log"
+LOGFILE = environ["HOMEPATH"] + r"\Desktop\PyChat\Log.log" # Replace with path to log file
+
+print(HOST) # Set this a 'HOST' on Client.py
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
