@@ -27,7 +27,6 @@ def handle(client):
             cmd = message[len(usernames[clients.index(client)])+2:]
             currentTime = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
             log = f"[{currentTime}] {repr(message)}"
-            print(log)
 
             if cmd != '':
                 if cmd == r"\LOGS":
@@ -39,15 +38,34 @@ def handle(client):
                     msg = "__SERVER__: ONLINE-"
                     for i in range(len(usernames)): msg = '\n'.join((msg, f"{i}: {usernames[i]}"))
                     client.send((msg + '\n').encode('utf-8'))
+                elif cmd.startswith("\\DM\\"):
+                    user = ""
+                    lastIndex = 0
+                    for i in range(4, len(cmd[4:])):
+                        if cmd[i] != '\\': user += cmd[i]
+                        else: lastIndex = i + 1;  break
+
+                    if user in usernames:
+                        index = usernames.index(user)
+                        clientName = usernames[clients.index(client)]
+                        message = f"{clientName} whispers to {user}: {cmd[lastIndex:]}"
+
+                        log = f"[{currentTime}] {repr(message)}"
+                        with open(LOGFILE, 'a') as file: file.write(log + '\n')
+                        print(log)
+
+                        clients[index].send((message + '\n').encode('utf-8'))
+                        client.send((message + '\n').encode('utf-8'))
+                    else:
+                        client.send("__SERVER__: UNKNOWN USER\n".encode('utf-8'))
                 else:
-                    if LOGFILE != "":
-                        with open(LOGFILE, 'a') as file:
-                            file.write(log + '\n')
+                    with open(LOGFILE, 'a') as file: file.write(log + '\n')
+                    print(log)
 
                     broadcast(message + '\n')
         except:
             index = clients.index(client)
-            broadcast(f"{usernames[index]} has left the chat.\n")
+            broadcast(f"__SERVER__: {usernames[index]} has left the chat.\n")
 
             clients.pop(index)
             usernames.pop(index)
@@ -60,14 +78,16 @@ def receive():
         client, address = server.accept()
 
         client.send("USRNME".encode('utf-8'))
-        username = client.recv(1024)
+        username = client.recv(1024).decode('utf-8')
+        if username not in usernames:
+            usernames.append(username)
+            clients.append(client)
+            broadcast(f"__SERVER__: {username} has joined!\n")
 
-        usernames.append(username)
-        clients.append(client)
-        broadcast(f"{username} has joined!\n")
-
-        thread = threading.Thread(target=handle, args=(client,))
-        thread.start()
+            thread = threading.Thread(target=handle, args=(client,))
+            thread.start()
+        else:
+            client.send("E000".encode('utf-8'))
 
 print("Server online.")
 receive()

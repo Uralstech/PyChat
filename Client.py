@@ -1,6 +1,7 @@
 import socket
 import threading
 from tkinter import *
+from tkinter.messagebox import showerror
 from tkinter.simpledialog import askstring
 from tkinter.scrolledtext import ScrolledText
 
@@ -30,11 +31,11 @@ class Client:
     def guiLoop(self):
         self.root = Tk()
         self.root.title("PyChat Main")
-        self.root.geometry("450x640")
+        self.root.geometry("850x640")
 
         self.textArea = ScrolledText(self.root, height=15, font=("Consolas", 20))
         self.textArea.pack(padx=10, pady=5, fill='x', expand=1)
-        self.textArea.insert('0.0', "Successfully connected. COMMANDS-\n\\LOGS: Show all logged messages\n\\ONLINE: Show online users\n\\CLEAR: Clear chat window\n")
+        self.textArea.insert('0.0', "Successfully connected. COMMANDS-\n\\DM\\(user)\\(message): Send private message to (user)\n\\LOGS: Show all logged messages\n\\ONLINE: Show online users\n\\CLEAR: Clear chat window\n")
         self.textArea['state'] = 'disabled'
 
         self.inputArea = Text(self.root, height=2, font=("Consolas", 20))
@@ -54,7 +55,9 @@ class Client:
         self.textArea.delete('0.0', 'end')
         self.textArea['state'] = 'disabled'
 
-    def stop(self):
+    def stop(self, msg=""):
+        if msg != "": showerror("PyChat", msg)
+
         self.running = False
         self.root.destroy()
         self.sock.close()
@@ -76,6 +79,7 @@ class Client:
             try:
                 message = self.sock.recv(1024).decode('utf-8')
                 if message == "USRNME": self.sock.send(self.username.encode('utf-8'))
+                elif message == "E000": self.stop("E000: USERNAME ALREADY EXISTS"); break
                 else:
                     if self.guiDone:
                         self.textArea['state'] = 'normal'
