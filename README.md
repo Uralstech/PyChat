@@ -6,7 +6,7 @@ You can download it and use it as a foundation for your own chat programs!
 
 ## Setup
 1. Run Server.py (*set ```HOST``` to LocalHost if you just want to test it out*)
-2. Set ```HOST``` in Client.py to the IP address printed on-screen by Server.py (**)
+2. Set ```HOST``` in Client.py to the IP address printed on-screen by Server.py (*idk what to put here*)
 3. Run Client.py on any client device (*a window asking for the client's username should show up*)
 4. Enter any username (*literally, any username; there's no identification for the user lol*)
 5. Repeat steps three and four (*this creates another user*)
