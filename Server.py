@@ -35,10 +35,10 @@ def handle(client):
                 if cmd == r"\LOGS":
                     if LOGFILE != "":
                         with open(LOGFILE, 'r') as file:
-                            client.send('\n'.join((r"__SERVER__: LOGS- (\t = tab-space, \n = new-line):", file.read())).encode('utf-8'))
-                    else: client.send("__SERVER__: AN ERROR OCCURED WHILE TRYING TO RETRIEVE CHAT LOGS.".encode('utf-8'))
+                            client.send('\n'.join((r"[SERVER]: LOGS- (\t = tab-space, \n = new-line):", file.read())).encode('utf-8'))
+                    else: client.send("[SERVER]: AN ERROR OCCURED WHILE TRYING TO RETRIEVE CHAT LOGS.".encode('utf-8'))
                 elif cmd == r"\ONLINE":
-                    msg = "__SERVER__: ONLINE-"
+                    msg = "[SERVER]: ONLINE-"
                     for i in range(len(usernames)): msg = '\n'.join((msg, f"{i}: {usernames[i]}"))
                     client.send((msg + '\n').encode('utf-8'))
                 elif cmd.startswith("\\DM\\"):
@@ -56,7 +56,7 @@ def handle(client):
                         clients[index].send((message + '\n').encode('utf-8'))
                         client.send((message + '\n').encode('utf-8'))
                     else:
-                        client.send("__SERVER__: UNKNOWN USER\n".encode('utf-8'))
+                        client.send("[SERVER]: UNKNOWN USER\n".encode('utf-8'))
                 else:
                     with open(LOGFILE, 'a') as file: file.write(log + '\n')
                     print(log)
@@ -64,7 +64,7 @@ def handle(client):
                     broadcast(message + '\n')
         except:
             index = clients.index(client)
-            broadcast(f"__SERVER__: {usernames[index]} has left the chat.\n")
+            broadcast(f"[SERVER]: {usernames[index]} has left the chat.\n")
 
             clients.pop(index)
             usernames.pop(index)
@@ -82,10 +82,10 @@ def receive():
         for i in username:
             if i in " \n\t\r\a\f\v\b\\": legal = False
 
-        if username not in usernames and legal and len(username) > 0 and username != "__SERVER__":
+        if username not in usernames and legal and len(username) > 0 and username != "[SERVER]":
             usernames.append(username)
             clients.append(client)
-            broadcast(f"__SERVER__: {username} has joined!\n")
+            broadcast(f"[SERVER]: {username} has joined!\n")
 
             thread = threading.Thread(target=handle, args=(client,))
             thread.start()
