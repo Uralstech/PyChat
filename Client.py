@@ -36,7 +36,7 @@ class Client:
         self.textArea.insert('0.0', "Successfully connected. COMMANDS-\n\\DM\\(user)\\(message): Send private message to (user)\n\\LOGS: Show all logged messages\n\\ONLINE: Show online users\n\\CLEAR: Clear chat window\n")
         self.textArea['state'] = 'disabled'
 
-        self.inputArea = Text(self.root, height=2, font=("Consolas", 20))
+        self.inputArea = ScrolledText(self.root, height=2, font=("Consolas", 20))
         self.inputArea.pack(padx=10, pady=2, fill='x', expand=1)
 
         self.sendButton = Button(self.root, text="Send", font=("Consolas", 20), command=self.write)
