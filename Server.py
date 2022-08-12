@@ -53,10 +53,6 @@ def handle(client):
                         clientName = usernames[clients.index(client)]
                         message = f"{clientName} whispers to {user}: {cmd[lastIndex:]}"
 
-                        log = f"[{currentTime}] {repr(message)}"
-                        with open(LOGFILE, 'a') as file: file.write(log + '\n')
-                        print(log)
-
                         clients[index].send((message + '\n').encode('utf-8'))
                         client.send((message + '\n').encode('utf-8'))
                     else:
