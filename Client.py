@@ -1,11 +1,13 @@
 import socket
 import threading
 from tkinter import *
+from tkinter.messagebox import showerror
 from tkinter.simpledialog import askstring
 from tkinter.scrolledtext import ScrolledText
 
 HOST = "127.0.0.1"
 PORT = 9090
+VERSION = '1.3.0' # DO NOT CHANGE
 
 class Client:
     def __init__(self, host, port):
@@ -14,8 +16,16 @@ class Client:
 
         self.username = askstring("PyChat", "Enter you username", parent=root)
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
+        if self.username == '' or ' ' in self.username or 'SERVER' in self.username.upper() or 'ADMIN' in self.username.upper():
+            showerror("PyChat", "INVALID USERNAME.")
+            return
+
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((host, port))
+        except:
+            showerror("PyChat", "COULD NOT CONNECT TO SERVER.")
+            return
 
         self.guiDone = False
         self.running = True
@@ -79,7 +89,7 @@ class Client:
         else:
             message = f'{self.username}: {message}'
             try: self.sock.send(message.encode('utf-8'))
-            except OSError: self.showerror("COULD NOT SEND MESSAGE.\nTHIS COULD BE BECAUSE\nTHE SERVER IS DOWN.", "200x85")
+            except OSError: self.showerror("COULD NOT SEND MESSAGE.\nPLEASE RESTART PYCHAT.", "200x75")
 
         self.inputArea.delete('0.0', 'end')
 
@@ -87,7 +97,12 @@ class Client:
         while self.running:
             try:
                 message = self.sock.recv(1024).decode('utf-8')
-                if message == "USRNME": self.sock.send(self.username.encode('utf-8'))
+                if message.startswith("::SERVER::"):
+                    if message[10:] != VERSION:
+                        self.showerror(f"SERVER VERSION ({message[10:]})\nIS DIFFERENT FROM\nCLIENT VERSION ({VERSION})", "180x85")
+                        self.sock.send('0'.encode('utf-8'))
+                    else: self.sock.send('1'.encode('utf-8'))
+                elif message == "USRNME": self.sock.send(self.username.encode('utf-8'))
                 elif message == "E000": self.showerror("USERNAME UNAVAILABLE.", "170x60"); break
                 else:
                     if self.guiDone:
