@@ -1,4 +1,3 @@
-import cmd
 import socket
 import threading
 from datetime import datetime
