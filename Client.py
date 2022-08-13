@@ -7,17 +7,22 @@ from tkinter.scrolledtext import ScrolledText
 
 HOST = "127.0.0.1"
 PORT = 9090
-VERSION = '1.3.0' # DO NOT CHANGE
+VERSION = '1.4.0' # DO NOT CHANGE
 
 class Client:
     def __init__(self, host, port):
         root = Tk()
         root.withdraw()
 
-        self.username = askstring("PyChat", "Enter you username", parent=root)
+        self.username = askstring("PyChat", "Enter your username", parent=root)
+        self.password = askstring("PyChat", "Enter your password", parent=root)
+        root.destroy()
 
-        if self.username == '' or ' ' in self.username or 'SERVER' in self.username.upper() or 'ADMIN' in self.username.upper():
+        if self.username == '' or self.username == None or ' ' in self.username or 'SERVER' in self.username.upper() or 'ADMIN' in self.username.upper():
             showerror("PyChat", "INVALID USERNAME.")
+            return
+        if self.password == '' or self.password == None:
+            showerror("PyChat", "INVALID PASSWORD.")
             return
 
         try:
@@ -103,7 +108,9 @@ class Client:
                         self.sock.send('0'.encode('utf-8'))
                     else: self.sock.send('1'.encode('utf-8'))
                 elif message == "USRNME": self.sock.send(self.username.encode('utf-8'))
+                elif message == "PASWRD": self.sock.send(self.password.encode('utf-8'))
                 elif message == "E000": self.showerror("USERNAME UNAVAILABLE.", "170x60"); break
+                elif message == "E001": self.showerror("INVALID PASSWORD.", "170x60"); break
                 else:
                     if self.guiDone:
                         self.textArea['state'] = 'normal'

@@ -1,12 +1,42 @@
 import socket
+import hashlib
 import threading
+from os.path import isfile
 from datetime import datetime
-from os import environ
+from os.path import join, abspath, dirname
+
+class ChainedDataBlock:
+    def __init__(self, previous_hash, raw_data):
+        self.previous_hash = previous_hash
+        self.raw_data = raw_data
+
+        self.block_data = '-'.join((*raw_data, previous_hash))
+        self.block_hash = self.makeHash()
+
+    def makeHash(self):
+        data = self.block_data
+
+        _hash = hashlib.sha3_256(data.encode(), usedforsecurity=True).hexdigest()
+        __hash = hashlib.sha3_256('-'.join((data, _hash)).encode(), usedforsecurity=True).hexdigest()
+        ___hash = hashlib.sha3_256('-'.join((data, __hash, _hash)).encode(), usedforsecurity=True).hexdigest()
+        return ___hash
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9090
-VERSION = '1.3.0' # DO NOT CHANGE
-LOGFILE = environ["HOMEPATH"] + r"\Desktop\PyChat\Log.log" # Replace with path to log file
+VERSION = '1.4.0' # DO NOT CHANGE
+print(abspath(dirname(__file__)))
+LOGFILE = join(abspath(dirname(__file__)), "Log.log")
+USRFILE = join(abspath(dirname(__file__)), "PyChatusers.block")
+
+if not isfile(USRFILE): file = open(USRFILE, 'x'); file.close()
+
+userData = {}
+with open(USRFILE, 'r') as file:
+    data = file.read().split('\n')[:-1]
+
+    if len(data) > 0:
+        for i in data: userData[i.split()[0]] = i.split()[1]
+usrnmeData = list(userData)
 
 print(HOST)
 
@@ -82,6 +112,11 @@ def handle(client):
             break
 
 def receive():
+    global userData
+    global usrnmeData
+    userData = userData
+    usrnmeData = usrnmeData
+
     while True:
         client, address = server.accept()
 
@@ -92,12 +127,36 @@ def receive():
             client.send(f"::SERVER::{VERSION}".encode('utf-8'))
             confirmation = client.recv(1024).decode('utf-8')
             if confirmation == "1":
-                usernames.append(username)
-                clients.append(client)
-                broadcast(f"[SERVER]: {username} has joined!\n")
+                client.send("PASWRD".encode('utf-8'))
+                password = client.recv(1024).decode('utf-8')
 
-                thread = threading.Thread(target=handle, args=(client,))
-                thread.start()
+                base = None
+
+                if username not in usrnmeData:
+                    if len(usrnmeData) > 0: base = userData[usrnmeData[-1]]
+                    else: base = "INIT"
+                elif usrnmeData.index(username) == 0: base = "INIT"
+                else: base = userData[usrnmeData[usrnmeData.index(username)-1]]
+
+                password_hash = ChainedDataBlock(base, password).block_hash
+
+                if username not in usrnmeData:
+                    userData[username] = password_hash
+                    usrnmeData = list(userData)
+                    with open(USRFILE, 'a') as file: file.write(f"{username} {password_hash}\n")
+                
+                print(base, "    ", repr(password))
+                print(password_hash)
+                print(userData[username])
+                if password_hash != userData[username]:
+                    client.send("E001".encode('utf-8'))
+                else:
+                    usernames.append(username)
+                    clients.append(client)
+                    broadcast(f"[SERVER]: {username} has joined!\n")
+
+                    thread = threading.Thread(target=handle, args=(client,))
+                    thread.start()
         else:
             client.send("E000".encode('utf-8'))
 
