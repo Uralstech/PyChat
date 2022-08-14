@@ -1,21 +1,53 @@
 import socket
 import threading
 from tkinter import *
+from tkinter.simpledialog import Dialog, askstring
 from tkinter.messagebox import showerror
-from tkinter.simpledialog import askstring
 from tkinter.scrolledtext import ScrolledText
 
-HOST = "127.0.0.1"
+HOST = "127.0.0.1" # CHANGE THIS TO "HOST = askstring("PyChat", "Enter server IP")" IF YOU WANT THE USER TO ENTER THE SERVER IP
+TIMEOUT = 120 # TIMEOUT FOR CONNECTING TO SERVER
 PORT = 9090
-VERSION = '1.4.0' # DO NOT CHANGE
+VERSION = '1.4.1' # DO NOT CHANGE
+
+class PyChatDialog(Dialog):
+    def __init__(self, master, title):
+        self.inputA = ""
+        self.inputB = ""
+        
+        super().__init__(master, title)
+
+    def body(self, master):
+        self.resizable(False, False)
+        Label(master, text="Username: ").grid(row=0)
+        Label(master, text="Password: ").grid(row=1)
+
+        self.e1 = Entry(master)
+        self.e2 = Entry(master, show='+')
+        self.e1.grid(row=0, column=1)
+        self.e2.grid(row=1, column=1)
+
+        return master
+    
+    def buttonbox(self):
+        box = Frame(self)
+        w = Button(box, text="Submit", width=10, command=self.ok, default=ACTIVE)
+        w.pack(fill='x', expand=1, padx=5, pady=5)
+        self.bind("<Return>", lambda x:self.ok())
+        box.pack(fill='x', expand=1)
+
+    def ok(self):
+        self.inputA = self.e1.get()
+        self.inputB = self.e2.get()
+        self.destroy()
 
 class Client:
-    def __init__(self, host, port):
+    def __init__(self, host, port, timeout):
         root = Tk()
         root.withdraw()
 
-        self.username = askstring("PyChat", "Enter your username", parent=root)
-        self.password = askstring("PyChat", "Enter your password", parent=root)
+        cd = PyChatDialog(root, "PyChat")
+        self.username, self.password = cd.inputA, cd.inputB
         root.destroy()
 
         if self.username == '' or self.username == None or ' ' in self.username or 'SERVER' in self.username.upper() or 'ADMIN' in self.username.upper():
@@ -27,6 +59,7 @@ class Client:
 
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.settimeout(timeout)
             self.sock.connect((host, port))
         except:
             showerror("PyChat", "COULD NOT CONNECT TO SERVER.")
@@ -48,7 +81,7 @@ class Client:
 
         self.textArea = ScrolledText(self.root, height=15, font=("Consolas", 20))
         self.textArea.pack(padx=10, pady=5, fill='x', expand=1)
-        self.textArea.insert('0.0', "Successfully connected. COMMANDS-\n\\DM\\(user)\\(message): Send private message to (user)\n\\LOGS: Show all logged messages\n\\ONLINE: Show online users\n\\CLEAR: Clear chat window\n")
+        self.textArea.insert('0.0', "COMMANDS-\n\\DM\\(user)\\(message): Send private message to (user)\n\\LOGS: Show all logged messages\n\\ONLINE: Show online users\n\\CLEAR: Clear chat window\n\\QUIT: Disconnects PyChat from server\n")
         self.textArea['state'] = 'disabled'
 
         self.inputArea = ScrolledText(self.root, height=2, font=("Consolas", 20))
@@ -57,6 +90,7 @@ class Client:
         self.sendButton = Button(self.root, text="Send", font=("Consolas", 20), command=self.write)
         self.sendButton.pack(padx=10, pady=5, fill='x', expand=1)
 
+        self.root.bind('<Return>', lambda x:self.write(returnV=True))
         self.root.protocol("WM_DELETE_WINDOW", self.stop)
         self.root.resizable(True, False)
 
@@ -86,14 +120,17 @@ class Client:
         self.sock.close()
         exit(0)
 
-    def write(self):
+    def write(self, returnV=False):
         message = self.inputArea.get('0.0', 'end')
+        if returnV: message = message[:-1]
 
         if message == "\\CLEAR\n":
             self.clear()
         else:
             message = f'{self.username}: {message}'
-            try: self.sock.send(message.encode('utf-8'))
+            try:
+                self.sock.send(message.encode('utf-8'))
+                if message == "\\QUIT\n": self.stop()
             except OSError: self.showerror("COULD NOT SEND MESSAGE.\nPLEASE RESTART PYCHAT.", "200x75")
 
         self.inputArea.delete('0.0', 'end')
@@ -125,4 +162,4 @@ class Client:
                 self.sock.close()
                 break
 
-Client(HOST, PORT)
+Client(HOST, PORT, TIMEOUT)

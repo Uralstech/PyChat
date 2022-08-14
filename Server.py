@@ -23,7 +23,7 @@ class ChainedDataBlock:
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9090
-VERSION = '1.4.0' # DO NOT CHANGE
+VERSION = '1.4.1' # DO NOT CHANGE
 print(abspath(dirname(__file__)))
 LOGFILE = join(abspath(dirname(__file__)), "Log.log")
 USRFILE = join(abspath(dirname(__file__)), "PyChatusers.block")
@@ -49,10 +49,6 @@ clients = []
 usernames = []
 
 def broadcast(message):
-    for client in clients:
-        try: client.send(message.encode('utf-8'))
-        except: pass
-    
     currentTime = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     log = f"[{currentTime}] "
     if message[-1] == '\n': message = message[:-1]
@@ -60,14 +56,27 @@ def broadcast(message):
     with open(LOGFILE, 'a') as file: file.write(log)
     print(log, end='')
 
+    message += '\n'
+    for client in clients: client.send(message.encode('utf-8'))
+
 def handle(client):
+    def removeClient():
+        index = clients.index(client)
+        broadcast(f"[SERVER]: {usernames[index]} has left the chat.\n")
+        clients.pop(index)
+        usernames.pop(index)
+        client.close()
+
     while True:
         try:
             message = client.recv(1024).decode('utf-8')[:-1]
             cmd = message[len(usernames[clients.index(client)])+2:]
 
             if cmd != '':
-                if cmd == r"\LOGS":
+                if cmd == r"\QUIT":
+                    removeClient()
+                    break
+                elif cmd == r"\LOGS":
                     if LOGFILE != "":
                         with open(LOGFILE, 'r') as file:
                             client.send('\n'.join((r"[SERVER]: LOGS- (\t = tab-space, \n = new-line):", file.read())).encode('utf-8'))
@@ -102,13 +111,7 @@ def handle(client):
                     message = str(message).replace('\n', rplcstr)
                     broadcast(message + '\n')
         except:
-            index = clients.index(client)
-            broadcast(f"[SERVER]: {usernames[index]} has left the chat.\n")
-
-            clients.pop(index)
-            usernames.pop(index)
-
-            client.close()
+            removeClient()
             break
 
 def receive():
@@ -119,6 +122,7 @@ def receive():
 
     while True:
         client, address = server.accept()
+        print("USER JOINED WITH ADDRESS: ", address)
 
         client.send("USRNME".encode('utf-8'))
         username = client.recv(1024).decode('utf-8')
@@ -145,9 +149,6 @@ def receive():
                     usrnmeData = list(userData)
                     with open(USRFILE, 'a') as file: file.write(f"{username} {password_hash}\n")
                 
-                print(base, "    ", repr(password))
-                print(password_hash)
-                print(userData[username])
                 if password_hash != userData[username]:
                     client.send("E001".encode('utf-8'))
                 else:
