@@ -5,7 +5,7 @@ from tkinter.simpledialog import Dialog, askstring
 from tkinter.messagebox import showerror
 from tkinter.scrolledtext import ScrolledText
 
-HOST = "127.0.0.1" # CHANGE THIS TO "HOST = askstring("PyChat", "Enter server IP")" IF YOU WANT THE USER TO ENTER THE SERVER IP
+HOST = socket.gethostbyname(socket.gethostname()) # CHANGE THIS TO "HOST = askstring("PyChat", "Enter server IP")" IF YOU WANT THE USER TO ENTER THE SERVER IP
 TIMEOUT = 120 # TIMEOUT FOR CONNECTING TO SERVER
 PORT = 9090
 VERSION = '1.4.1' # DO NOT CHANGE
@@ -48,7 +48,6 @@ class Client:
 
         cd = PyChatDialog(root, "PyChat")
         self.username, self.password = cd.inputA, cd.inputB
-        root.destroy()
 
         if self.username == '' or self.username == None or ' ' in self.username or 'SERVER' in self.username.upper() or 'ADMIN' in self.username.upper():
             showerror("PyChat", "INVALID USERNAME.")
