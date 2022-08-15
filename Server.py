@@ -23,7 +23,7 @@ class ChainedDataBlock:
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 9090
-VERSION = '1.4.1' # DO NOT CHANGE
+VERSION = '1.4.2' # DO NOT CHANGE
 print(abspath(dirname(__file__)))
 LOGFILE = join(abspath(dirname(__file__)), "Log.log")
 USRFILE = join(abspath(dirname(__file__)), "PyChatusers.block")
@@ -161,5 +161,9 @@ def receive():
         else:
             client.send("E000".encode('utf-8'))
 
-print("Server online.")
-receive()
+def main():
+    print("Server online.")
+    receive()
+    
+if __name__ == '__main__':
+    main()

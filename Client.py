@@ -8,7 +8,7 @@ from tkinter.scrolledtext import ScrolledText
 HOST = socket.gethostbyname(socket.gethostname()) # CHANGE THIS TO "HOST = askstring("PyChat", "Enter server IP")" IF YOU WANT THE USER TO ENTER THE SERVER IP
 TIMEOUT = 120 # TIMEOUT FOR CONNECTING TO SERVER
 PORT = 9090
-VERSION = '1.4.1' # DO NOT CHANGE
+VERSION = '1.4.2' # DO NOT CHANGE
 
 class PyChatDialog(Dialog):
     def __init__(self, master, title):
@@ -161,4 +161,6 @@ class Client:
                 self.sock.close()
                 break
 
-Client(HOST, PORT, TIMEOUT)
+
+if __name__ == '__main__':
+    Client(HOST, PORT, TIMEOUT)
