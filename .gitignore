@@ -1,2 +1,6 @@
 /Log.log
 /PyChatusers.block
+/Incidents.log
+/Client/PyChatConfigs.json
+/__pycache__
+Client/__pycache__
