@@ -61,9 +61,6 @@ class PyChatClient:
     def __init__(self) -> None:
         self.root: Tk | None = None
         self.message_backlog: str = ''
-
-        self.__gui_loop()
-
         self.__select_server()
 
     def __select_server(self) -> None:
